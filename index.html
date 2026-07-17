@@ -3,32 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiira Dynamic CTP Digital Twin</title>
+    <title>T-6 Battery Manufacturing Dynamic Model</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #020617; /* Slate 950 */
-            color: #f8fafc;
+            background-color: #f8fafc; /* Slate 50 - Light Theme */
+            color: #0f172a; /* Slate 900 */
             overflow: hidden;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Updated Glass Panel for Light Theme */
         .glass-panel {
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(203, 213, 225, 0.6);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
+        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         #canvas-container { cursor: grab; }
         #canvas-container:active { cursor: grabbing; }
         
-        /* Loading Overlay for Rebuilds */
         #rebuild-overlay {
             transition: opacity 0.3s ease;
             pointer-events: none;
@@ -37,15 +40,12 @@
 </head>
 <body class="h-screen w-screen flex flex-col">
 
-<header class="bg-slate-900 border-b border-slate-800 px-4 py-3 z-50 shadow-lg flex-shrink-0">
+<header class="bg-slate-900 border-b border-slate-800 px-4 py-3 z-50 shadow-md flex-shrink-0">
     <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-            <div class="p-2 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/20">
-                <i class="fa-solid fa-industry text-xl"></i>
-            </div>
             <div>
                 <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                    Kiira Plant Dynamic Model
+                    T-6 Battery Manufacturing Dynamic Model
                     <span id="badge-threads" class="text-[10px] font-semibold bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30">Auto-Scaling Threads</span>
                 </h1>
                 <p class="text-[11px] text-slate-400">
@@ -55,39 +55,39 @@
         </div>
         
         <!-- Shift Targets Display -->
-        <div class="flex items-center gap-4 text-xs font-medium text-slate-400 bg-slate-950 border border-slate-800 rounded-lg px-4 py-1.5 shadow-inner">
+        <div class="flex items-center gap-4 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-4 py-1.5 shadow-sm">
             <div class="text-center">
                 <span class="block text-[9px] uppercase text-slate-500">Target (10h Shift)</span>
-                <span id="stat-target-packs" class="mono text-sm font-bold text-amber-400">1,182 Packs</span>
+                <span id="stat-target-packs" class="mono text-sm font-bold text-amber-600">1,182 Packs</span>
             </div>
-            <div class="w-px h-6 bg-slate-800"></div>
+            <div class="w-px h-6 bg-slate-200"></div>
             <div class="text-center">
                 <span class="block text-[9px] uppercase text-slate-500">Req. Line Takt</span>
-                <span id="stat-req-takt" class="mono text-sm font-bold text-emerald-400">30.4s / Pack</span>
+                <span id="stat-req-takt" class="mono text-sm font-bold text-emerald-600">30.4s / Pack</span>
             </div>
         </div>
 
-        <div class="flex items-center gap-4 text-xs font-medium text-slate-400">
-            <div class="flex items-center gap-3 bg-slate-950 border border-slate-800 rounded px-3 py-1.5">
-                <div class="flex items-center gap-2 text-emerald-400">
+        <div class="flex items-center gap-4 text-xs font-medium text-slate-600">
+            <div class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded px-3 py-1.5 shadow-sm">
+                <div class="flex items-center gap-2 text-emerald-600">
                     <i class="fa-solid fa-battery-half"></i>
                     <div>
                         <span class="block text-[9px] uppercase text-slate-500">Cells In</span>
-                        <span id="stat-cells-in" class="mono text-sm font-bold text-white">0</span>
+                        <span id="stat-cells-in" class="mono text-sm font-bold text-slate-800">0</span>
                     </div>
                 </div>
-                <div class="w-px h-6 bg-slate-800"></div>
-                <div class="flex items-center gap-2 text-orange-400">
+                <div class="w-px h-6 bg-slate-200"></div>
+                <div class="flex items-center gap-2 text-orange-500">
                     <i class="fa-solid fa-car-battery"></i>
                     <div>
                         <span class="block text-[9px] uppercase text-slate-500">Packs Out</span>
-                        <span id="stat-packs-out" class="mono text-sm font-bold text-white">0</span>
+                        <span id="stat-packs-out" class="mono text-sm font-bold text-slate-800">0</span>
                     </div>
                 </div>
-                <div class="w-px h-6 bg-slate-800"></div>
+                <div class="w-px h-6 bg-slate-200"></div>
                 <div>
                     <span class="block text-[9px] uppercase text-slate-500">Sim Clock</span>
-                    <span id="sim-clock" class="mono text-sm font-bold text-slate-300">00:00:00</span>
+                    <span id="sim-clock" class="mono text-sm font-bold text-slate-700">00:00:00</span>
                 </div>
             </div>
         </div>
@@ -96,40 +96,58 @@
 
 <main class="flex-grow flex overflow-hidden relative">
     
-    <aside class="w-80 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col z-40 shadow-xl overflow-y-auto hidden md:flex">
+    <aside class="w-80 bg-slate-50 border-r border-slate-200 flex-shrink-0 flex flex-col z-40 shadow-lg overflow-y-auto hidden md:flex">
         <div class="p-4 space-y-6">
             
             <!-- Global Capacity & BOM Model -->
-            <div class="space-y-3 bg-blue-900/10 p-3 rounded-lg border border-blue-500/20">
-                <div class="flex justify-between items-center border-b border-blue-500/30 pb-2">
-                    <h3 class="text-sm font-bold text-blue-300 uppercase tracking-wider">Plant Capacity & BOM</h3>
-                    <button onclick="applyCapacityChange()" class="bg-blue-600 hover:bg-blue-500 text-white text-[10px] px-2 py-1 rounded shadow transition">
+            <div class="space-y-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <h3 class="text-sm font-bold text-blue-700 uppercase tracking-wider">Plant Capacity & BOM</h3>
+                    <button onclick="applyCapacityChange()" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-2 py-1 rounded shadow-sm transition">
                         Apply Settings
                     </button>
                 </div>
                 <div class="space-y-2">
-                    <div class="flex justify-between text-xs text-slate-300">
+                    <div class="flex justify-between text-xs text-slate-600">
                         <span>Annual Target (GWh)</span>
-                        <span class="mono text-white font-bold" id="lbl-gwh">10 GWh</span>
+                        <span class="mono text-slate-900 font-bold" id="lbl-gwh">10 GWh</span>
                     </div>
-                    <input type="range" id="param-gwh" min="2" max="30" step="1" value="10" oninput="previewCapacity()" class="w-full accent-blue-500">
+                    <input type="range" id="param-gwh" min="2" max="30" step="1" value="10" oninput="previewCapacity()" class="w-full accent-blue-600">
                 </div>
                 
-                <div class="space-y-2 pt-2 border-t border-slate-700/50">
-                    <div class="flex justify-between text-xs text-slate-300">
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between text-xs text-slate-600">
                         <span>Pack Capacity (kWh)</span>
-                        <span class="mono text-white font-bold" id="lbl-pack-kwh">35 kWh</span>
+                        <span class="mono text-slate-900 font-bold" id="lbl-pack-kwh">35 kWh</span>
                     </div>
-                    <input type="range" id="param-pack-kwh" min="20" max="150" step="5" value="35" oninput="previewCapacity()" class="w-full accent-purple-400">
+                    <input type="range" id="param-pack-kwh" min="20" max="150" step="5" value="35" oninput="previewCapacity()" class="w-full accent-purple-600">
                 </div>
 
-                <div class="space-y-2 pt-2">
-                    <div class="flex justify-between text-xs text-slate-300">
-                        <span>Cells per Pack (BOM)</span>
-                        <span class="mono text-emerald-400 font-bold" id="lbl-cells-pack">48</span>
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between text-xs text-slate-600">
+                        <span>Shift Pattern</span>
                     </div>
-                    <input type="range" id="param-cells-pack" min="16" max="200" step="4" value="48" oninput="previewCapacity()" class="w-full accent-emerald-500">
-                    <p class="text-[9px] text-slate-400 leading-tight mt-1">
+                    <div class="flex gap-2">
+                        <select id="param-shifts" class="flex-1 bg-white hover:bg-slate-50 transition text-slate-700 text-[10px] p-1.5 rounded border border-slate-300" onchange="applyCapacityChange()">
+                            <option value="1">1 Shift</option>
+                            <option value="2">2 Shifts</option>
+                            <option value="3">3 Shifts</option>
+                        </select>
+                        <select id="param-shift-len" class="flex-1 bg-white hover:bg-slate-50 transition text-slate-700 text-[10px] p-1.5 rounded border border-slate-300" onchange="applyCapacityChange()">
+                            <option value="8">8 Hours</option>
+                            <option value="10" selected>10 Hours</option>
+                            <option value="12">12 Hours</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-slate-100 mt-2">
+                    <div class="flex justify-between text-xs text-slate-600">
+                        <span>Cells per Pack (BOM)</span>
+                        <span class="mono text-emerald-600 font-bold" id="lbl-cells-pack">48</span>
+                    </div>
+                    <input type="range" id="param-cells-pack" min="16" max="200" step="4" value="48" oninput="previewCapacity()" class="w-full accent-emerald-600">
+                    <p class="text-[9px] text-slate-500 leading-tight mt-1">
                         Model applies formula: Daily Packs = (GWh / Pack kWh) / 240 days. Thread scaling responds dynamically.
                     </p>
                 </div>
@@ -137,70 +155,77 @@
 
             <!-- Simulation Controls -->
             <div class="space-y-3">
-                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-slate-800 pb-1">Engine Controls</h3>
+                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-200 pb-1">Engine Controls</h3>
                 
                 <div class="flex gap-2">
-                    <button onclick="toggleSim()" id="btn-play" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded transition shadow-md flex items-center justify-center gap-2 text-sm">
+                    <button onclick="toggleSim()" id="btn-play" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded transition shadow-sm flex items-center justify-center gap-2 text-sm">
                         <i class="fa-solid fa-play" id="play-icon"></i> Start Shift
                     </button>
-                    <button onclick="resetSimTime()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded transition shadow-md text-sm" title="Reset Clock">
+                    <button onclick="resetSimTime()" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 px-3 py-2 rounded transition shadow-sm text-sm" title="Reset Clock">
                         <i class="fa-solid fa-rotate-left"></i>
                     </button>
                 </div>
 
                 <div class="space-y-2 pt-2">
-                    <div class="flex justify-between text-xs text-slate-400">
+                    <div class="flex justify-between text-xs text-slate-600">
                         <span>Time Warp (Sim Speed)</span>
-                        <span class="mono text-purple-400" id="lbl-speed">10x</span>
+                        <span class="mono text-purple-600 font-bold" id="lbl-speed">10x</span>
                     </div>
                     <div class="flex gap-1">
-                        <button onclick="setSpeed(1)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-xs py-1 rounded border border-slate-700 speed-btn" data-speed="1">1x</button>
-                        <button onclick="setSpeed(10)" class="flex-1 bg-purple-600 text-white text-xs py-1 rounded border border-purple-500 shadow-inner speed-btn active-speed" data-speed="10">10x</button>
-                        <button onclick="setSpeed(50)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-xs py-1 rounded border border-slate-700 speed-btn" data-speed="50">50x</button>
-                        <button onclick="setSpeed(100)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-xs py-1 rounded border border-slate-700 speed-btn" data-speed="100">100x</button>
+                        <button onclick="setSpeed(1)" class="flex-1 bg-white hover:bg-slate-50 text-slate-600 text-xs py-1 rounded border border-slate-300 speed-btn transition shadow-sm" data-speed="1">1x</button>
+                        <button onclick="setSpeed(10)" class="flex-1 bg-purple-600 text-white text-xs py-1 rounded border border-purple-500 shadow-inner speed-btn active-speed transition" data-speed="10">10x</button>
+                        <button onclick="setSpeed(50)" class="flex-1 bg-white hover:bg-slate-50 text-slate-600 text-xs py-1 rounded border border-slate-300 speed-btn transition shadow-sm" data-speed="50">50x</button>
+                        <button onclick="setSpeed(100)" class="flex-1 bg-white hover:bg-slate-50 text-slate-600 text-xs py-1 rounded border border-slate-300 speed-btn transition shadow-sm" data-speed="100">100x</button>
                     </div>
                 </div>
             </div>
 
             <!-- External Logistics -->
             <div class="space-y-3">
-                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-slate-800 pb-1">Supply Chain Logistics</h3>
+                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-200 pb-1">Supply Chain Logistics</h3>
                 
                 <div class="space-y-2">
-                    <div class="flex justify-between text-xs text-slate-400">
+                    <div class="flex justify-between text-xs text-slate-600">
                         <span>Inbound Delivery Rate</span>
-                        <span class="mono text-emerald-400" id="lbl-inbound-rate">2 Trucks/hr</span>
+                        <span class="mono text-emerald-600 font-bold" id="lbl-inbound-rate">2 Trucks/hr</span>
                     </div>
-                    <input type="range" id="param-inbound-rate" min="0.5" max="10" step="0.5" value="2" class="w-full accent-emerald-500">
+                    <input type="range" id="param-inbound-rate" min="0.5" max="10" step="0.5" value="2" class="w-full accent-emerald-600">
                     <p class="text-[9px] text-slate-500">Drives cell supply. Starvation stops the entire line.</p>
                 </div>
 
                 <div class="space-y-2 pt-2">
-                    <div class="flex justify-between text-xs text-slate-400">
+                    <div class="flex justify-between text-xs text-slate-600">
                         <span>Outbound Batch Size</span>
-                        <span class="mono text-orange-400" id="lbl-outbound-batch">30 Packs</span>
+                        <span class="mono text-orange-600 font-bold" id="lbl-outbound-batch">30 Packs</span>
                     </div>
                     <input type="range" id="param-outbound-batch" min="10" max="60" step="5" value="30" class="w-full accent-orange-500">
-                    <p class="text-[9px] text-slate-500">Packs required in FG Warehouse to trigger a dispatch truck.</p>
                 </div>
             </div>
 
             <!-- Dynamic Cycle Times -->
             <div class="space-y-3">
-                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-slate-800 pb-1">Machine Cycle Times</h3>
+                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-200 pb-1">Machine Cycle Times</h3>
                 
                 <div class="space-y-2">
-                    <div class="flex justify-between text-xs text-slate-400">
+                    <div class="flex justify-between text-xs text-slate-600">
                         <span>Cell Stacker Cycle</span>
-                        <span class="mono text-amber-400" id="lbl-cycle-stack">120s</span>
+                        <span class="mono text-amber-600 font-bold" id="lbl-cycle-stack">120s</span>
                     </div>
                     <input type="range" id="param-cycle-stack" min="30" max="300" value="120" class="w-full accent-amber-500">
                 </div>
 
-                <div class="space-y-2 pt-2">
-                    <div class="flex justify-between text-xs text-slate-400">
+                <div class="space-y-2 pt-2 border-t border-slate-100 mt-2">
+                    <div class="flex justify-between text-xs text-slate-600">
+                        <span>Laser Weld Cycle</span>
+                        <span class="mono text-blue-600 font-bold" id="lbl-cycle-weld">25s</span>
+                    </div>
+                    <input type="range" id="param-weld-stack" min="10" max="100" step="1" value="25" class="w-full accent-blue-600">
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-slate-100 mt-2">
+                    <div class="flex justify-between text-xs text-slate-600">
                         <span>EOL Cycler Time</span>
-                        <span class="mono text-rose-400" id="lbl-cycle-eol">180s</span>
+                        <span class="mono text-rose-600 font-bold" id="lbl-cycle-eol">180s</span>
                     </div>
                     <input type="range" id="param-cycle-eol" min="60" max="300" step="10" value="180" class="w-full accent-rose-500">
                 </div>
@@ -209,34 +234,34 @@
         </div>
     </aside>
 
-    <div id="canvas-container" class="flex-grow relative bg-[#09090b]">
-        <!-- Blueprint Grid -->
-        <div class="absolute inset-0 pointer-events-none" style="background-image: linear-gradient(rgba(51, 65, 85, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(51, 65, 85, 0.2) 1px, transparent 1px); background-size: 50px 50px;"></div>
+    <div id="canvas-container" class="flex-grow relative bg-[#f3efe6]">
+        <!-- Blueprint Grid for Light Theme -->
+        <div class="absolute inset-0 pointer-events-none" style="background-image: linear-gradient(rgba(100, 116, 139, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(100, 116, 139, 0.1) 1px, transparent 1px); background-size: 50px 50px;"></div>
         
         <canvas id="plantCanvas" class="absolute inset-0 block"></canvas>
 
-        <div id="rebuild-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur flex flex-col items-center justify-center opacity-0 z-10">
-            <i class="fa-solid fa-gear fa-spin text-4xl text-blue-500 mb-4"></i>
-            <h2 class="text-xl font-bold text-white tracking-widest uppercase">Re-provisioning Line Layout</h2>
-            <p class="text-slate-400 mt-2 text-sm" id="rebuild-text">Calculating threads for 10 GWh target...</p>
+        <div id="rebuild-overlay" class="absolute inset-0 bg-white/80 backdrop-blur flex flex-col items-center justify-center opacity-0 z-10">
+            <i class="fa-solid fa-gear fa-spin text-4xl text-blue-600 mb-4"></i>
+            <h2 class="text-xl font-bold text-slate-800 tracking-widest uppercase">Re-provisioning Line Layout</h2>
+            <p class="text-slate-600 mt-2 text-sm" id="rebuild-text">Calculating threads for 10 GWh target...</p>
         </div>
 
         <div class="absolute bottom-6 right-6 flex flex-col gap-2">
-            <div class="glass-panel text-[10px] uppercase font-bold text-slate-400 p-2 rounded text-right space-y-1">
+            <div class="glass-panel text-[10px] uppercase font-bold text-slate-600 p-2 rounded text-right space-y-1">
                 <div>Active Parallel Threads:</div>
-                <div class="text-amber-400"><span id="ind-stackers">4</span> Stackers</div>
-                <div class="text-blue-400"><span id="ind-welders">3</span> Welders</div>
-                <div class="text-rose-400"><span id="ind-cyclers">6</span> Cyclers</div>
+                <div><span class="text-amber-600" id="ind-stackers">4</span> Stackers</div>
+                <div><span class="text-blue-600" id="ind-welders">3</span> Welders</div>
+                <div><span class="text-rose-600" id="ind-cyclers">6</span> Cyclers</div>
             </div>
-            <button onclick="resetView()" class="glass-panel text-slate-300 hover:text-white p-2 rounded shadow-lg transition flex items-center justify-center" title="Reset View">
+            <button onclick="resetView()" class="glass-panel text-slate-600 hover:text-blue-600 p-2 rounded transition flex items-center justify-center" title="Reset View">
                 <i class="fa-solid fa-compress"></i>
             </button>
         </div>
         
-        <div class="absolute top-4 right-4 glass-panel rounded-lg p-2 flex gap-3 text-[10px] uppercase font-bold text-slate-400 items-center shadow-lg">
+        <div class="absolute top-4 right-4 glass-panel rounded-lg p-2 flex gap-3 text-[10px] uppercase font-bold text-slate-600 items-center">
             <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-emerald-500"></div> Raw Cells</div>
             <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-amber-400"></div> Modules</div>
-            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_#f97316]"></div> Finished Packs</div>
+            <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-orange-500"></div> Finished Packs</div>
         </div>
     </div>
 </main>
@@ -245,52 +270,40 @@
     const canvas = document.getElementById('plantCanvas');
     const ctx = canvas.getContext('2d');
     
-    // Engine State
     let isDragging = false;
     let dragStartX, dragStartY;
     let camera = { x: 0, y: 0, scale: 0.65 };
     
-    // Plant Logic Parameters
-    let FACTORY_W = 3200;
-    let FACTORY_H = 1800; // Will expand dynamically based on threads
+    let FACTORY_W = 3400;
+    let FACTORY_H = 1800; 
 
     let isRunning = false;
     let lastTime = 0;
-    let simTimeSec = 0; // Starts at Shift 00:00:00
+    let simTimeSec = 0; 
     let stats = { cellsIn: 0, packsOut: 0 };
     
     let config = {
         gwh: 10,
         packKwh: 35,
         cellsPerPack: 48,
-        targetPacks: 1190, // Calculated automatically
+        targetPacks: 1190, 
         reqTakt: 30.2,
         
-        // Logistics
-        inboundRate: 2, // Trucks per hour
-        inboundTimer: 0, // Secs until next delivery
-        outboundBatch: 30, // Packs per dispatch truck
+        inboundRate: 2, 
+        inboundTimer: 0, 
+        outboundBatch: 30, 
         
-        // Settings
-        stackCycle: 120, // More realistic for assembling a whole pack
+        stackCycle: 120, 
         weldCycle: 25,
         eolCycle: 180,
         simSpeedMultiplier: 10
     };
 
-    // Data Structures
     let nodes = {};
     let links = [];
     let particles = [];
     let trucks = [];
-
-    // Constants for Thread Mapping (Base threads needed for 10GWh Baseline)
-    const BASE_THREADS = {
-        OCV: 3,
-        Stacker: 4,
-        Welder: 3,
-        Cycler: 6
-    };
+    let plantZones = {}; 
 
     function previewCapacity() {
         let gwhVal = document.getElementById('param-gwh').value;
@@ -300,87 +313,79 @@
         document.getElementById('lbl-gwh').innerText = gwhVal + ' GWh';
         document.getElementById('lbl-pack-kwh').innerText = kwhVal + ' kWh';
         document.getElementById('lbl-cells-pack').innerText = cellsVal;
-        
-        document.getElementById('param-gwh').classList.add('bg-blue-500/30');
     }
 
     function applyCapacityChange() {
-        document.getElementById('param-gwh').classList.remove('bg-blue-500/30');
         config.gwh = parseFloat(document.getElementById('param-gwh').value);
         config.packKwh = parseFloat(document.getElementById('param-pack-kwh').value);
         config.cellsPerPack = parseInt(document.getElementById('param-cells-pack').value);
         
-        // 1. Exact Math Correlation Based on Your Engineering Model
-        // Formula: (Annual Capacity GWh * 1,000,000) / Pack Capacity kWh / 240 days
+        config.shifts = parseInt(document.getElementById('param-shifts') ? document.getElementById('param-shifts').value : 1);
+        config.shiftLen = parseInt(document.getElementById('param-shift-len') ? document.getElementById('param-shift-len').value : 10);
+        let totalWorkHours = config.shifts * config.shiftLen;
+
         let totalPacksPerYear = (config.gwh * 1000000) / config.packKwh;
         config.targetPacks = Math.ceil(totalPacksPerYear / 240); 
         
-        // Takt Time Calculation (10 hours * 3600 seconds) / target packs
-        config.reqTakt = (10 * 3600) / config.targetPacks;
+        config.reqTakt = (totalWorkHours * 3600) / config.targetPacks;
 
-        // Determine scaling based on standard baseline
-        let scaleFactor = config.targetPacks / 1182.0;
-
-        // Update UI
+        let targetLabel = document.querySelector('#stat-target-packs').previousElementSibling;
+        if(targetLabel) targetLabel.innerText = `Target (${totalWorkHours}h Day)`;
+        
         document.getElementById('stat-target-packs').innerText = config.targetPacks.toLocaleString() + " Packs";
         document.getElementById('stat-req-takt').innerText = config.reqTakt.toFixed(1) + "s / Pack";
 
-        // Show Loading Overlay
         let overlay = document.getElementById('rebuild-overlay');
         document.getElementById('rebuild-text').innerText = `Calculating spatial threads for ${config.gwh} GWh target...`;
         overlay.style.opacity = 1;
 
-        // Pause sim during rebuild
         let wasRunning = isRunning;
         isRunning = false;
 
         setTimeout(() => {
-            buildFactory(scaleFactor);
-            resetSimTime(); // Reset shift clock
+            buildFactory();
+            resetSimTime(); 
             overlay.style.opacity = 0;
-            if (wasRunning) toggleSim(); // Auto-resume
+            if (wasRunning) toggleSim(); 
         }, 800);
     }
 
-    // Helper to register links
     function link(fromId, toId) {
-        if(!nodes[fromId] || !nodes[toId]) return; // Failsafe
+        if(!nodes[fromId] || !nodes[toId]) return; 
         links.push({ from: fromId, to: toId });
         if(!nodes[fromId].next) nodes[fromId].next = [];
         nodes[fromId].next.push(toId);
     }
 
-    // Helper to fan out/in
-    function linkManyToOne(fromIds, toId) {
-        fromIds.forEach(id => link(id, toId));
-    }
-    function linkOneToMany(fromId, toIds) {
-        toIds.forEach(id => link(fromId, id));
-    }
+    function linkManyToOne(fromIds, toId) { fromIds.forEach(id => link(id, toId)); }
+    function linkOneToMany(fromId, toIds) { toIds.forEach(id => link(fromId, id)); }
 
-    function buildFactory(scaleFactor = 1.0) {
+    function buildFactory() {
         nodes = {};
         links = [];
         particles = [];
         trucks = [];
         stats = { cellsIn: 0, packsOut: 0 };
+        plantZones = {};
 
-        // Determine thread counts based on scaling
-        let tOCV = Math.max(1, Math.ceil(BASE_THREADS.OCV * scaleFactor));
-        let tStack = Math.max(1, Math.ceil(BASE_THREADS.Stacker * scaleFactor));
-        let tWeld = Math.max(1, Math.ceil(BASE_THREADS.Welder * scaleFactor));
-        let tCycler = Math.max(1, Math.ceil(BASE_THREADS.Cycler * scaleFactor));
+        // Dynamic Thread Calculations based on required Takt
+        let tOCV = Math.max(1, Math.ceil(0.1 / config.reqTakt));
+        let tStack = Math.max(1, Math.ceil(config.stackCycle / config.reqTakt));
+        let tWeld = Math.max(1, Math.ceil(config.weldCycle / config.reqTakt));
+        let tCycler = Math.max(1, Math.ceil(config.eolCycle / config.reqTakt));
+        
+        let tCln = Math.max(1, Math.ceil(15 / config.reqTakt)); 
+        let tFpc = Math.max(1, Math.ceil(20 / config.reqTakt)); 
+        let tCcd = Math.max(1, Math.ceil(10 / config.reqTakt)); 
 
-        // Update thread indicators UI
         document.getElementById('ind-stackers').innerText = tStack;
         document.getElementById('ind-welders').innerText = tWeld;
         document.getElementById('ind-cyclers').innerText = tCycler;
 
-        // Dynamically adjust virtual height based on the max thread count to prevent overlapping
-        let maxThreads = Math.max(tOCV, tStack, tWeld, tCycler);
+        let maxThreads = Math.max(tOCV, tStack, tWeld, tCycler, tCln, tFpc, tCcd);
         FACTORY_H = Math.max(1600, 400 + maxThreads * 120);
+        FACTORY_W = 3500; // Expanded to fit defect buffer
 
-        // Node creation factory function
         const n = (id, label, type, x, y, cap, baseTime, isTransformer = false, unit = 'Cells') => {
             nodes[id] = { 
                 id, label, type, x, y, 
@@ -391,7 +396,6 @@
             };
         };
 
-        // Function to build a vertical parallel block of machines
         const buildParallelBlock = (prefix, label, type, baseX, centerY, count, cap, time, spacingY = 100, isTransformer = false, unit = 'Cells') => {
             let startY = centerY - ((count - 1) * spacingY) / 2;
             let ids = [];
@@ -403,96 +407,106 @@
             return ids;
         };
 
-        // --- THE FACTORY LAYOUT (Left to Right, U-Shape Flow) ---
-        let midY = FACTORY_H / 2 - 200; // Main corridor Y
+        let midY = FACTORY_H / 2 - 200; 
 
-        // Zone 1: Inbound & Prep (High-speed automated cell handling)
+        // Zone 1: BATTERY CELL WAREHOUSE
         n('W01', 'Inbound Dock', 'IO', 100, midY, 100000, 0.01, false, 'Cells');
         n('W02', 'Depalletize', 'M', 250, midY, 100, 0.01, false, 'Cells');
         n('B01', 'Cell Storage', 'B', 400, midY, 5000, 0.01, false, 'Cells');
         
+        // Zone 2: CELL INTEGRATION
         let ocvNodes = buildParallelBlock('C', 'OCV Test', 'M', 600, midY, tOCV, 1, 0.1, 80, false, 'Cells');
-        
         n('C_Sort', 'Sorting Merge', 'M', 800, midY, 10, 0.1, false, 'Cells');
-        n('Q_Bay', 'Defect Reject', 'B', 800, midY + 120, 50, 0.1, false, 'Cells'); // Quarantine Bay
+        n('Q_Bay', 'Defect Reject', 'B', 800, midY + 120, 50, 0.1, false, 'Cells'); 
         n('C_Clean', 'Plasma Clean', 'M', 950, midY, 10, 0.1, false, 'Cells');
+        n('B02', 'Pre-Stack Buf', 'B', 1100, midY, 200, 1, false, 'Cells'); 
         
-        // Zone 2: Stacking & Welding
-        n('B02', 'Pre-Stack Buf', 'B', 1150, midY, 200, 1, false, 'Cells'); // Reduced physical footprint limit
-        
-        // BOM TRANSFORMATION: Stack Bots require `cellsPerPack` to run cycle, and output 1.
-        // Capacity must be at least config.cellsPerPack * 2 to hold WIP and queue.
         let stackCap = config.cellsPerPack * 2;
-        let stackNodes = buildParallelBlock('S', 'Stack Bot', 'M', 1350, midY, tStack, stackCap, config.stackCycle, 90, true, 'Cells');
+        let stackNodes = buildParallelBlock('S', 'Stack Bot', 'M', 1300, midY, tStack, stackCap, config.stackCycle, 90, true, 'Cells');
         
-        // Physical Pack / Module Handling starts here (Logical constraints drastically reduced)
-        n('S_Comp', 'Compress/Band', 'M', 1550, midY, 2, 8, false, 'Packs');
-        n('B03', 'Pre-Weld Buf', 'B', 1750, midY, 15, 1, false, 'Packs');
+        n('S_Comp', 'Compress/Band', 'M', 1500, midY, 2, 8, false, 'Packs');
+        n('B03', 'Pre-Weld Buf', 'B', 1650, midY, 15, 1, false, 'Packs');
 
-        // Dry Room Welding
-        let weldNodes = buildParallelBlock('W_L', 'Laser Weld', 'M', 2000, midY, tWeld, 1, config.weldCycle, 100, false, 'Packs');
+        // Zone 3: CLEAN & DRY ROOM MINI-ENVIRONMENT
+        let clnNodes = buildParallelBlock('W_CLN', 'Pole Clean', 'M', 1800, midY, tCln, 1, 15, 100, false, 'Packs');
+        n('B_C1', 'Buf', 'B', 1900, midY, 5, 1, false, 'Packs'); 
         
-        n('B04', 'Module Buffer', 'B', 2250, midY, 15, 1, false, 'Packs');
+        let fpcNodes = buildParallelBlock('W_FPC', 'Busbar Install', 'M', 2000, midY, tFpc, 1, 20, 100, false, 'Packs');
+        n('B_C2', 'Buf', 'B', 2100, midY, 5, 1, false, 'Packs');
+        
+        let weldNodes = buildParallelBlock('W_L', 'Laser Weld', 'M', 2200, midY, tWeld, 1, config.weldCycle, 100, false, 'Packs');
+        n('B_C3', 'Buf', 'B', 2300, midY, 5, 1, false, 'Packs');
 
-        // --- THE TURN AROUND (U-SHAPE) ---
-        // Tray preparation (Feeds up into Pack Marriage)
+        let ccdNodes = buildParallelBlock('W_CCD', 'Bead Inspect', 'M', 2400, midY, tCcd, 1, 10, 100, false, 'Packs');
+        
+        // NEW: Bead Reject Pipeline
+        n('CCD_Sort', 'Bead Sort', 'M', 2520, midY, 10, 0.1, false, 'Packs');
+        n('Q_Bead_Reject', 'Bead Reject', 'B', 2520, midY + 120, 50, 0.1, false, 'Packs');
+        
+        n('B04', 'Module Buffer', 'B', 2650, midY, 15, 1, false, 'Packs');
+
+        // Turn Around (U-SHAPE)
         let lowerY = midY + 400;
-        n('P01', 'Tray Depallet', 'M', 2450, lowerY, 1, 5, false, 'Trays');
-        n('P02', 'TIM Dispense', 'M', 2250, lowerY, 1, 10, false, 'Trays');
+        n('P01', 'Tray Depallet', 'M', 2800, lowerY, 1, 5, false, 'Trays');
+        n('P02', 'TIM Dispense', 'M', 2650, lowerY, 1, 10, false, 'Trays');
         
-        // Zone 3: Pack Integration (Moving Right to Left)
-        n('M01', 'Pack Marriage', 'M', 2050, lowerY, 1, 15, false, 'Packs'); // Merges Module + Tray
-        n('M02', 'Fastening', 'M', 1850, lowerY, 1, 20, false, 'Packs');
-        n('M03', 'HV/LV Harness', 'M', 1650, lowerY, 1, 25, false, 'Packs');
-        n('M04', 'BMS Install', 'M', 1450, lowerY, 1, 15, false, 'Packs');
-        n('B05', 'Pre-Seal Buf', 'B', 1250, lowerY, 10, 1, false, 'Packs');
+        n('M01', 'Pack Marriage', 'M', 2500, lowerY, 1, 15, false, 'Packs'); 
+        nodes['M01'].auxInventory = 0; 
+        n('M02', 'Fastening', 'M', 2300, lowerY, 1, 20, false, 'Packs');
+        n('M03', 'HV/LV Harness', 'M', 2100, lowerY, 1, 25, false, 'Packs');
+        n('M04', 'BMS Install', 'M', 1900, lowerY, 1, 15, false, 'Packs');
+        n('B05', 'Pre-Seal Buf', 'B', 1750, lowerY, 10, 1, false, 'Packs');
+        n('E01', 'Cover & Seal', 'M', 1550, lowerY, 1, 25, false, 'Packs');
         
-        n('E01', 'Cover & Seal', 'M', 1050, lowerY, 1, 25, false, 'Packs');
-        n('B06', 'EOL Buffer', 'B', 850, lowerY, 20, 1, false, 'Packs');
+        // Zone 4: END OF LINE VALIDATION
+        n('B06', 'EOL Buffer', 'B', 1400, lowerY, 20, 1, false, 'Packs');
+        n('T01', 'He Leak Test', 'M', 1200, lowerY, 1, 20, false, 'Packs');
+        n('T02', 'Hipot Test', 'M', 1050, lowerY, 1, 15, false, 'Packs');
+        
+        let cyclerNodes = buildParallelBlock('CY', 'Cycler', 'M', 800, lowerY, tCycler, 1, config.eolCycle, 110, false, 'Packs');
+        n('T_QG', 'Final QG', 'M', 550, lowerY, 1, 10, false, 'Packs'); 
+        n('W03_Out', 'FG Racking', 'B', 350, lowerY, 1000, 1, false, 'Packs');
+        n('W04_Out', 'Dispatch Dock', 'IO', 150, lowerY, 500, 1, false, 'Packs');
 
-        // Zone 4: Parallel EOL Testing
-        n('T01', 'He Leak Test', 'M', 650, lowerY, 1, 20, false, 'Packs');
-        n('T02', 'Hipot Test', 'M', 450, lowerY, 1, 15, false, 'Packs');
-        
-        let cyclerNodes = buildParallelBlock('CY', 'Cycler', 'M', 250, lowerY + 200, tCycler, 1, config.eolCycle, 110, false, 'Packs');
-        
-        n('T_QG', 'Final QG', 'M', 250, midY + 400, 1, 10, false, 'Packs'); 
-        
-        n('W03_Out', 'FG Racking', 'B', 100, midY + 400, 1000, 1, false, 'Packs');
-        n('W04_Out', 'Dispatch Dock', 'IO', 100, midY + 550, 500, 1, false, 'Packs');
+        // Zones definitions
+        plantZones = {
+            'BATTERY CELL WAREHOUSE': ['W01', 'W02', 'B01'],
+            'CELL INTEGRATION': [...ocvNodes, 'C_Sort', 'Q_Bay', 'C_Clean', 'B02', ...stackNodes, 'S_Comp', 'B03'],
+            'CLEAN & DRY ROOM MINI-ENVIRONMENT': [...clnNodes, 'B_C1', ...fpcNodes, 'B_C2', ...weldNodes, 'B_C3', ...ccdNodes, 'CCD_Sort', 'Q_Bead_Reject', 'B04', 'M01', 'M02', 'M03', 'M04', 'B05', 'E01'],
+            'END OF LINE VALIDATION': ['B06', 'T01', 'T02', ...cyclerNodes, 'T_QG']
+        };
 
-
-        // --- LINKING THE DYNAMIC GRAPH ---
         link('W01', 'W02'); link('W02', 'B01');
-        linkOneToMany('B01', ocvNodes);
-        linkManyToOne(ocvNodes, 'C_Sort');
-        link('C_Sort', 'C_Clean'); 
-        link('C_Sort', 'Q_Bay'); // Connect Reject Bay
+        linkOneToMany('B01', ocvNodes); linkManyToOne(ocvNodes, 'C_Sort');
+        link('C_Sort', 'C_Clean'); link('C_Sort', 'Q_Bay');
         link('C_Clean', 'B02');
-        
-        linkOneToMany('B02', stackNodes);
-        linkManyToOne(stackNodes, 'S_Comp');
+        linkOneToMany('B02', stackNodes); linkManyToOne(stackNodes, 'S_Comp');
         link('S_Comp', 'B03');
         
-        linkOneToMany('B03', weldNodes);
-        linkManyToOne(weldNodes, 'B04');
+        linkOneToMany('B03', clnNodes); linkManyToOne(clnNodes, 'B_C1');
+        linkOneToMany('B_C1', fpcNodes); linkManyToOne(fpcNodes, 'B_C2');
+        linkOneToMany('B_C2', weldNodes); linkManyToOne(weldNodes, 'B_C3');
+        linkOneToMany('B_C3', ccdNodes); 
+        
+        // Linking new Sorting setup
+        linkManyToOne(ccdNodes, 'CCD_Sort');
+        link('CCD_Sort', 'B04');
+        link('CCD_Sort', 'Q_Bead_Reject');
 
-        // Tray flow
         link('P01', 'P02'); link('P02', 'M01');
-        
-        // Modules merge into tray
         link('B04', 'M01');
-        
         link('M01', 'M02'); link('M02', 'M03'); link('M03', 'M04'); link('M04', 'B05');
         link('B05', 'E01'); link('E01', 'B06'); link('B06', 'T01'); link('T01', 'T02');
         
-        linkOneToMany('T02', cyclerNodes);
-        linkManyToOne(cyclerNodes, 'T_QG');
-        
+        linkOneToMany('T02', cyclerNodes); linkManyToOne(cyclerNodes, 'T_QG');
         link('T_QG', 'W03_Out'); link('W03_Out', 'W04_Out');
 
-        // Initial setup
-        config.inboundTimer = 5; // First truck arrives quickly
+        n('W05_Mat_In', 'Material Dock', 'IO', 3050, lowerY, 10000, 0.01, false, 'Trays');
+        n('B_Mat', 'Material WH', 'B', 2950, lowerY, 1000, 0.01, false, 'Trays');
+        link('W05_Mat_In', 'B_Mat'); link('B_Mat', 'P01');
+
+        config.inboundTimer = 5; 
+        config.matInboundTimer = 10; 
         resetView();
     }
 
@@ -531,7 +545,7 @@
     });
 
     function resetView() {
-        camera.scale = 0.5; // Zoomed out to see the whole 10GWh line
+        camera.scale = 0.5; 
         camera.x = canvas.width / 2 - (FACTORY_W / 2) * camera.scale;
         camera.y = canvas.height / 2 - (FACTORY_H / 2) * camera.scale + 100;
     }
@@ -539,103 +553,124 @@
     function updateSim(dt) {
         if (!isRunning) return;
         
-        // Time advancement (Sim Time)
         let simDt = dt * config.simSpeedMultiplier;
         simTimeSec += simDt;
 
         updateUIParams();
-
-        // 1. External Logistics (Strict Rate Engine)
         handleTrucks(simDt);
 
-        // 2. Node Processing Logic (Strict Conservation of Mass)
         for (let id in nodes) {
             let n = nodes[id];
             let batchRequired = n.isTransformer ? config.cellsPerPack : 1;
             let outputQty = 1;
             
-            // A. Tick down timer if working
             if (n.currentTimer > 0) {
                 n.currentTimer -= simDt;
                 if (n.currentTimer <= 0) {
                     n.currentTimer = 0;
-                    n.status = 'holding'; // Processing finished, waiting to push downstream
+                    n.status = 'holding'; 
                 } else {
                     n.status = 'working';
                 }
             }
 
-            // B. Start processing or holding if enough input inventory is present
+            let canStart = false;
+            if (id === 'M01') {
+                canStart = (n.inventory >= 1 && n.auxInventory >= 1);
+            } else {
+                canStart = (n.inventory >= batchRequired);
+            }
+
             if (n.type === 'M') {
-                if (n.inventory >= batchRequired && n.currentTimer === 0 && n.status !== 'holding') {
-                    // Start cycle based on dynamic slider settings
+                if (canStart && n.currentTimer === 0 && n.status !== 'holding') {
                     let pTime = n.processingTime;
                     if (id.startsWith('S') && !id.includes('Comp')) pTime = config.stackCycle;
                     if (id.startsWith('W_L')) pTime = config.weldCycle;
                     if (id.startsWith('CY')) pTime = config.eolCycle;
+                    if (id.startsWith('W_CLN')) pTime = 15;
+                    if (id.startsWith('W_FPC')) pTime = 20;
+                    if (id.startsWith('W_CCD')) pTime = 10;
                     
-                    n.currentTimer = pTime * (0.9 + Math.random() * 0.2); // Add +/- 10% real-world variance
+                    n.currentTimer = pTime * (0.9 + Math.random() * 0.2); 
                     n.status = 'working';
                 }
             } else if (n.type === 'B' || n.type === 'IO') {
-                if (n.inventory >= batchRequired) {
-                    n.status = 'holding'; // Ready to push instantly
-                } else {
-                    n.status = 'idle'; // CRITICAL FIX: Clear buffer status when empty
-                }
+                if (canStart) n.status = 'holding';
+                else n.status = 'idle'; 
             }
 
-            // C. Push logic (Strict validation to prevent Ghost Inventory)
+            // Node Pushing logic 
             if (n.status === 'holding' && n.next.length > 0) {
                 let targetId = null;
                 
-                let availableNexts = n.next.filter(nxt => (nodes[nxt].cap - nodes[nxt].inventory) >= outputQty);
+                let availableNexts = n.next.filter(nxt => {
+                    if (id === 'P02' && nxt === 'M01') return (nodes[nxt].cap - nodes[nxt].auxInventory) >= outputQty;
+                    return (nodes[nxt].cap - nodes[nxt].inventory) >= outputQty;
+                });
                 
                 if (availableNexts.length > 0) {
                     if (id === 'C_Sort') {
                         let isDefect = Math.random() < 0.02;
                         let target = isDefect ? 'Q_Bay' : 'C_Clean';
                         if (availableNexts.includes(target)) targetId = target;
-                    } else {
+                    } 
+                    // Dynamic Routing for Bead Reject Sort
+                    else if (id === 'CCD_Sort') {
+                        let isDefect = Math.random() < 0.03; // 3% defect rate
+                        let target = isDefect ? 'Q_Bead_Reject' : 'B04';
+                        if (availableNexts.includes(target)) targetId = target;
+                    } 
+                    else {
                         availableNexts.sort((a, b) => nodes[a].inventory - nodes[b].inventory);
                         targetId = availableNexts[0];
                     }
                 }
 
                 if (targetId) {
-                    // STRICT MASS VALIDATION: Ensure we actually have the materials to push
-                    if (n.inventory >= batchRequired) {
-                        n.inventory -= batchRequired;
-                        nodes[targetId].inventory += outputQty;
+                    let hasRequired = (id === 'M01') ? (n.inventory >= 1 && n.auxInventory >= 1) : (n.inventory >= batchRequired);
+
+                    if (hasRequired) {
+                        if (id === 'M01') {
+                            n.inventory -= 1; n.auxInventory -= 1; 
+                        } else {
+                            n.inventory -= batchRequired;
+                        }
+                        
+                        if (id === 'P02' && targetId === 'M01') {
+                            nodes[targetId].auxInventory += outputQty; 
+                        } else {
+                            nodes[targetId].inventory += outputQty;
+                        }
                         
                         if (id === 'W01') stats.cellsIn += batchRequired;
                         if (targetId === 'W04_Out') stats.packsOut += outputQty;
 
                         let matType = n.isTransformer ? 'module' : 'cell';
                         if (!n.isTransformer) {
-                            if (n.x > 1700 || (n.y > FACTORY_H/2 && n.x > 2000)) matType = 'module';
-                            if (n.x <= 2000 && n.y > FACTORY_H/2 && !id.startsWith('P')) matType = 'pack';
+                            if (id.startsWith('P') || id === 'W05_Mat_In' || id === 'B_Mat') matType = 'module'; 
+                            else if (n.x > 1700 || (n.y > FACTORY_H/2 && n.x > 2000)) matType = 'module';
+                            if (n.x <= 2000 && n.y > FACTORY_H/2 && !id.startsWith('P') && !id.startsWith('W05') && !id.startsWith('B_Mat')) matType = 'pack';
                             if (id.startsWith('M0') && id !== 'M01') matType = 'pack';
                         }
                         
                         spawnParticle(n.x, n.y, nodes[targetId].x, nodes[targetId].y, matType);
                     }
 
-                    // Re-evaluate state immediately to enforce idle limits
-                    if (n.inventory >= batchRequired) {
+                    let stillHasRequired = (id === 'M01') ? (n.inventory >= 1 && n.auxInventory >= 1) : (n.inventory >= batchRequired);
+                    if (stillHasRequired) {
                         if (n.type === 'M') {
                             let pTime = n.processingTime;
                             if (id.startsWith('S') && !id.includes('Comp')) pTime = config.stackCycle;
                             if (id.startsWith('W_L')) pTime = config.weldCycle;
                             if (id.startsWith('CY')) pTime = config.eolCycle;
+                            if (id.startsWith('W_CLN')) pTime = 15;
+                            if (id.startsWith('W_FPC')) pTime = 20;
+                            if (id.startsWith('W_CCD')) pTime = 10;
+                            
                             n.currentTimer = pTime * (0.9 + Math.random() * 0.2);
                             n.status = 'working';
-                        } else {
-                            n.status = 'holding';
-                        }
-                    } else {
-                        n.status = 'idle'; // CRITICAL FIX: Node becomes dormant
-                    }
+                        } else n.status = 'holding';
+                    } else n.status = 'idle'; 
                 } else {
                     if (n.type === 'M') n.status = 'blocked'; 
                 }
@@ -644,66 +679,72 @@
             }
         }
 
-        // 3. Update Particles
         let particleSpeed = simDt * 1.5; 
         for (let i = particles.length - 1; i >= 0; i--) {
             let p = particles[i];
             p.progress += particleSpeed;
             p.x = p.startX + (p.targetX - p.startX) * p.progress;
             p.y = p.startY + (p.targetY - p.startY) * p.progress;
-            
             if (p.progress >= 1) particles.splice(i, 1);
         }
     }
 
     function spawnParticle(x1, y1, x2, y2, type) {
-        particles.push({
-            startX: x1, startY: y1, targetX: x2, targetY: y2, x: x1, y: y1, progress: 0, type: type
-        });
+        particles.push({ startX: x1, startY: y1, targetX: x2, targetY: y2, x: x1, y: y1, progress: 0, type: type });
     }
 
     function handleTrucks(simDt) {
-        // Calculate inbound rate (Seconds between trucks)
         let ratePerHour = parseFloat(document.getElementById('param-inbound-rate').value);
         let secsBetweenDeliveries = 3600 / ratePerHour;
 
         config.inboundTimer -= simDt;
         if (config.inboundTimer <= 0) {
-            // Spawn Inbound Truck
             trucks.push({ type: 'inbound', x: -300, y: nodes['W01'].y, state: 'arriving', timer: 0 });
             config.inboundTimer = secsBetweenDeliveries;
         }
 
-        // Calculate outbound trigger based on batch size
+        if (config.matInboundTimer !== undefined) {
+            config.matInboundTimer -= simDt;
+            if (config.matInboundTimer <= 0) {
+                let startX = Math.max(canvas.width, FACTORY_W) + 600;
+                trucks.push({ type: 'material', x: startX, y: nodes['W05_Mat_In'].y, state: 'arriving', timer: 0 });
+                config.matInboundTimer = secsBetweenDeliveries * 1.5; 
+            }
+        }
+
         let batchSize = parseInt(document.getElementById('param-outbound-batch').value);
         if (nodes['W04_Out'].inventory >= batchSize) {
-            // Prevent spawning multiple trucks simultaneously for the same batch
             if (trucks.filter(t => t.type === 'outbound' && t.state === 'arriving').length === 0) {
                 trucks.push({ type: 'outbound', x: -300, y: nodes['W04_Out'].y, state: 'arriving', timer: 0, batch: batchSize });
             }
         }
 
-        let truckSpeed = 80; // visual pixels per second
+        let truckSpeed = 80; 
         for (let i = trucks.length - 1; i >= 0; i--) {
             let t = trucks[i];
-            let visualDt = (simDt / config.simSpeedMultiplier) * 2; // Keep truck animation speed somewhat consistent visually
+            let visualDt = (simDt / config.simSpeedMultiplier) * 2; 
             
             if (t.state === 'arriving') {
-                t.x += visualDt * truckSpeed; 
-                if (t.x >= 20) { // Docking position
-                    t.state = 'docked';
-                    t.timer = 10; // Unload time visual
+                if (t.type === 'material') {
+                    t.x -= visualDt * truckSpeed; 
+                    if (t.x <= nodes['W05_Mat_In'].x + 50) { t.state = 'docked'; t.timer = 10; }
+                } else {
+                    t.x += visualDt * truckSpeed; 
+                    if (t.x >= 20) { t.state = 'docked'; t.timer = 10; }
                 }
             } 
             if (t.state === 'docked') {
                 t.timer -= visualDt;
                 if (t.timer <= 0) {
                     if (t.type === 'inbound') {
-                        // Unload payload: Calculate based on exact daily target and cell BOM
                         let dailyCellsReq = config.targetPacks * config.cellsPerPack;
                         let payload = Math.round(dailyCellsReq / (10 * ratePerHour));
                         nodes['W01'].inventory = Math.min(nodes['W01'].inventory + payload, nodes['W01'].cap);
                         showFloatingText(`+${payload.toLocaleString()} Cells`, 100, nodes['W01'].y - 30, "#10b981");
+                    } else if (t.type === 'material') {
+                        let payload = Math.round(config.targetPacks / (10 * ratePerHour)) + 10;
+                        nodes['W05_Mat_In'].inventory = Math.min(nodes['W05_Mat_In'].inventory + payload, nodes['W05_Mat_In'].cap);
+                        showFloatingText(`+${payload} Trays`, nodes['W05_Mat_In'].x, nodes['W05_Mat_In'].y - 30, "#d97706");
                     } else if (t.type === 'outbound') {
                         nodes['W04_Out'].inventory -= t.batch;
                         showFloatingText(`-${t.batch} Packs Dispatched`, 100, nodes['W04_Out'].y - 30, "#f97316");
@@ -712,8 +753,13 @@
                 }
             } 
             else if (t.state === 'departing') {
-                t.x -= visualDt * truckSpeed; 
-                if (t.x < -300) trucks.splice(i, 1);
+                if (t.type === 'material') {
+                    t.x += visualDt * truckSpeed; 
+                    if (t.x > FACTORY_W + 500) trucks.splice(i, 1);
+                } else {
+                    t.x -= visualDt * truckSpeed; 
+                    if (t.x < -300) trucks.splice(i, 1);
+                }
             }
         }
     }
@@ -732,18 +778,16 @@
 
         drawZones();
 
-        // Draw Conveyor Links
         ctx.lineWidth = 3;
         for (let l of links) {
             let n1 = nodes[l.from];
             let n2 = nodes[l.to];
             if(!n1 || !n2) continue;
             
-            ctx.strokeStyle = '#334155';
+            ctx.strokeStyle = '#94a3b8'; // Light Theme lines
             ctx.beginPath();
             ctx.moveTo(n1.x, n1.y);
             
-            // Orthogonal routing logic
             if (Math.abs(n1.x - n2.x) > Math.abs(n1.y - n2.y)) {
                 ctx.lineTo(n2.x, n1.y);
             } else {
@@ -752,53 +796,48 @@
             
             ctx.lineTo(n2.x, n2.y);
             ctx.stroke();
-
-            // Inner line detail
-            ctx.strokeStyle = '#1e293b';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            ctx.lineWidth = 3;
         }
 
-        // Draw Nodes
         for (let id in nodes) {
             let n = nodes[id];
             let isBuf = n.type === 'B';
             let rx = n.x - n.w/2;
             let ry = n.y - n.h/2;
             
-            ctx.fillStyle = isBuf ? 'rgba(30, 41, 59, 0.9)' : 'rgba(15, 23, 42, 0.9)';
+            // Light Theme Box Colors
+            ctx.fillStyle = isBuf ? '#f1f5f9' : '#ffffff';
             
-            if (n.status === 'blocked') ctx.strokeStyle = '#ef4444'; // Red
-            else if (n.status === 'working') ctx.strokeStyle = '#3b82f6'; // Blue
-            else ctx.strokeStyle = '#64748b'; // Idle gray
+            if (n.status === 'blocked') ctx.strokeStyle = '#ef4444'; 
+            else if (n.status === 'working') ctx.strokeStyle = '#3b82f6'; 
+            else ctx.strokeStyle = '#cbd5e1'; // Light Theme Idle
             
-            if (isBuf) ctx.strokeStyle = '#8b5cf6'; // Purple
+            if (isBuf) ctx.strokeStyle = '#8b5cf6'; 
 
             ctx.lineWidth = 2;
             ctx.fillRect(rx, ry, n.w, n.h);
             ctx.strokeRect(rx, ry, n.w, n.h);
 
-            // Node ID
-            ctx.fillStyle = '#f1f5f9';
+            // Light Theme Text Colors
+            ctx.fillStyle = '#1e293b';
             ctx.font = 'bold 11px Inter';
             ctx.textAlign = 'center';
             ctx.fillText(id, n.x, ry + 14);
             
-            // Inventory fill bar
             let fillPct = n.inventory / n.cap;
-            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            ctx.fillStyle = 'rgba(0,0,0,0.05)';
             ctx.fillRect(rx + 2, n.y + 4, n.w - 4, n.h/2 - 6);
             ctx.fillStyle = getFillColor(fillPct);
             ctx.fillRect(rx + 2, n.y + 4, (n.w - 4) * fillPct, n.h/2 - 6);
 
-            // Inventory Text
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = '#334155';
             ctx.font = '9px JetBrains Mono';
-            ctx.fillText(`${n.inventory}/${n.cap} ${n.unit}`, n.x, n.y + 14);
+            if (id === 'M01') {
+                ctx.fillText(`M:${n.inventory} | T:${n.auxInventory}`, n.x, n.y + 14);
+            } else {
+                ctx.fillText(`${n.inventory}/${n.cap} ${n.unit}`, n.x, n.y + 14);
+            }
 
-            // Label text below
-            ctx.fillStyle = '#94a3b8';
+            ctx.fillStyle = '#64748b';
             ctx.font = '10px Inter';
             ctx.fillText(n.label, n.x, ry + n.h + 14);
         }
@@ -809,7 +848,7 @@
             ctx.arc(p.x, p.y, p.type === 'pack' ? 6 : p.type === 'module' ? 4 : 3, 0, Math.PI*2);
             
             if (p.type === 'cell') { ctx.fillStyle = '#10b981'; ctx.shadowColor = '#10b981'; } 
-            if (p.type === 'module') { ctx.fillStyle = '#fbbf24'; ctx.shadowColor = '#fbbf24'; } 
+            if (p.type === 'module') { ctx.fillStyle = '#f59e0b'; ctx.shadowColor = '#f59e0b'; } 
             if (p.type === 'pack') { ctx.fillStyle = '#f97316'; ctx.shadowColor = '#f97316'; } 
             
             ctx.shadowBlur = 8;
@@ -824,19 +863,35 @@
 
         // Draw Trucks
         for (let t of trucks) {
-            ctx.fillStyle = t.type === 'inbound' ? '#10b981' : '#f97316';
-            ctx.fillRect(t.x, t.y - 20, 100, 40); // Trailer
-            ctx.fillStyle = '#cbd5e1';
-            ctx.fillRect(t.x + 100, t.y - 15, 30, 30); // Cab
-            ctx.fillStyle = '#0f172a'; // Wheels
-            ctx.fillRect(t.x + 10, t.y + 20, 15, 5); ctx.fillRect(t.x + 80, t.y + 20, 15, 5);
-            ctx.fillRect(t.x + 110, t.y + 15, 15, 5); ctx.fillRect(t.x + 10, t.y - 25, 15, 5);
-            ctx.fillRect(t.x + 80, t.y - 25, 15, 5); ctx.fillRect(t.x + 110, t.y - 20, 15, 5);
+            ctx.fillStyle = t.type === 'inbound' ? '#10b981' : (t.type === 'material' ? '#f59e0b' : '#f97316');
             
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 12px Inter';
-            ctx.textAlign = 'center';
-            ctx.fillText(t.type === 'inbound' ? 'RAW CELLS' : 'FG PACKS', t.x + 50, t.y + 4);
+            if (t.type === 'material') {
+                ctx.fillRect(t.x, t.y - 20, 100, 40); 
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillRect(t.x - 30, t.y - 15, 30, 30); 
+                ctx.fillStyle = '#0f172a'; 
+                ctx.fillRect(t.x + 10, t.y + 20, 15, 5); ctx.fillRect(t.x + 80, t.y + 20, 15, 5);
+                ctx.fillRect(t.x - 20, t.y + 15, 15, 5); ctx.fillRect(t.x + 10, t.y - 25, 15, 5);
+                ctx.fillRect(t.x + 80, t.y - 25, 15, 5); ctx.fillRect(t.x - 20, t.y - 20, 15, 5);
+                
+                ctx.fillStyle = '#1e293b'; // Dark text for contrast on yellow truck
+                ctx.font = 'bold 12px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText('TRAYS', t.x + 50, t.y + 4);
+            } else {
+                ctx.fillRect(t.x, t.y - 20, 100, 40); 
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillRect(t.x + 100, t.y - 15, 30, 30); 
+                ctx.fillStyle = '#0f172a'; 
+                ctx.fillRect(t.x + 10, t.y + 20, 15, 5); ctx.fillRect(t.x + 80, t.y + 20, 15, 5);
+                ctx.fillRect(t.x + 110, t.y + 15, 15, 5); ctx.fillRect(t.x + 10, t.y - 25, 15, 5);
+                ctx.fillRect(t.x + 80, t.y - 25, 15, 5); ctx.fillRect(t.x + 110, t.y - 20, 15, 5);
+                
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 12px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(t.type === 'inbound' ? 'RAW CELLS' : 'FG PACKS', t.x + 50, t.y + 4);
+            }
         }
 
         // Draw Floating Texts
@@ -856,36 +911,63 @@
     }
 
     function drawZones() {
-        // Laser Weld Clean Room
-        let wNode = nodes['W_L1'];
-        if(wNode) {
-            ctx.fillStyle = 'rgba(59, 130, 246, 0.05)';
-            ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)';
-            ctx.lineWidth = 2; ctx.setLineDash([10, 5]);
-            // Dynamically scale height based on number of welders
-            let tWeld = Math.max(1, Math.ceil(BASE_THREADS.Welder * (config.gwh/10)));
-            ctx.fillRect(1850, wNode.y - 80, 400, tWeld * 100 + 100);
-            ctx.strokeRect(1850, wNode.y - 80, 400, tWeld * 100 + 100);
-            ctx.setLineDash([]);
-            ctx.fillStyle = 'rgba(59, 130, 246, 0.5)';
-            ctx.font = 'bold 14px Inter';
-            ctx.textAlign = 'left';
-            ctx.fillText("CLASS 7 DRY ROOM", 1860, wNode.y - 60);
+        // Adjusted opacity and colors for light theme
+        const zoneConfig = {
+            'BATTERY CELL WAREHOUSE': '100, 116, 139', 
+            'CELL INTEGRATION': '16, 185, 129', 
+            'CLEAN & DRY ROOM MINI-ENVIRONMENT': '37, 99, 235', 
+            'END OF LINE VALIDATION': '225, 29, 72' 
+        };
+
+        for (let zoneName in plantZones) {
+            let nodeIds = plantZones[zoneName];
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            let validNodes = false;
+            
+            nodeIds.forEach(id => {
+                let n = nodes[id];
+                if (n) {
+                    minX = Math.min(minX, n.x - n.w/2);
+                    minY = Math.min(minY, n.y - n.h/2);
+                    maxX = Math.max(maxX, n.x + n.w/2);
+                    maxY = Math.max(maxY, n.y + n.h/2);
+                    validNodes = true;
+                }
+            });
+
+            if (validNodes) {
+                minX -= 45; minY -= 45; maxX += 45; maxY += 45; 
+                let color = zoneConfig[zoneName] || '100, 116, 139';
+                
+                ctx.fillStyle = `rgba(${color}, 0.04)`;
+                ctx.strokeStyle = `rgba(${color}, 0.3)`;
+                ctx.lineWidth = 2; ctx.setLineDash([10, 5]);
+                
+                ctx.fillRect(minX, minY, maxX - minX, maxY - minY);
+                ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+                ctx.setLineDash([]);
+                
+                ctx.fillStyle = `rgba(${color}, 0.9)`;
+                ctx.font = 'bold 16px Inter';
+                ctx.textAlign = 'left';
+                ctx.fillText(zoneName, minX + 15, minY + 28);
+            }
         }
     }
 
     function getFillColor(pct) {
-        if (pct < 0.5) return '#10b981'; // Green
-        if (pct < 0.85) return '#f59e0b'; // Amber
-        return '#ef4444'; // Red (Warning full)
+        if (pct < 0.5) return '#10b981'; 
+        if (pct < 0.85) return '#f59e0b'; 
+        return '#ef4444'; 
     }
 
     function updateUIParams() {
         config.stackCycle = parseInt(document.getElementById('param-cycle-stack').value);
-        config.weldCycle = parseInt(document.getElementById('param-weld-stack') ? document.getElementById('param-weld-stack').value : 25); // Hardcoded fallback if UI missing
+        config.weldCycle = parseInt(document.getElementById('param-weld-stack') ? document.getElementById('param-weld-stack').value : 25); 
         config.eolCycle = parseInt(document.getElementById('param-cycle-eol').value);
         
         document.getElementById('lbl-cycle-stack').innerText = config.stackCycle + 's';
+        if (document.getElementById('lbl-cycle-weld')) document.getElementById('lbl-cycle-weld').innerText = config.weldCycle + 's';
         document.getElementById('lbl-cycle-eol').innerText = config.eolCycle + 's';
         
         let rate = document.getElementById('param-inbound-rate').value;
@@ -894,7 +976,6 @@
         let batch = document.getElementById('param-outbound-batch').value;
         document.getElementById('lbl-outbound-batch').innerText = batch + ' Packs';
 
-        // Clock Update (HH:MM:SS format)
         let h = Math.floor(simTimeSec / 3600);
         let m = Math.floor((simTimeSec % 3600) / 60);
         let s = Math.floor(simTimeSec % 60);
@@ -903,7 +984,6 @@
         document.getElementById('stat-cells-in').innerText = stats.cellsIn.toLocaleString();
         document.getElementById('stat-packs-out').innerText = stats.packsOut.toLocaleString();
         
-        // Auto-stop at end of 10 hr shift
         if (simTimeSec >= 36000 && isRunning) {
             toggleSim();
             alert("10-Hour Shift Complete. Final Pack Output: " + stats.packsOut);
@@ -914,11 +994,9 @@
         config.simSpeedMultiplier = speed;
         document.getElementById('lbl-speed').innerText = speed + 'x';
         document.querySelectorAll('.speed-btn').forEach(b => {
-            b.classList.remove('bg-purple-600', 'text-white', 'border-purple-500', 'shadow-inner');
-            b.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
+            b.className = 'flex-1 bg-white hover:bg-slate-50 text-slate-600 text-xs py-1 rounded border border-slate-300 speed-btn transition shadow-sm';
             if (parseInt(b.getAttribute('data-speed')) === speed) {
-                b.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
-                b.classList.add('bg-purple-600', 'text-white', 'border-purple-500', 'shadow-inner');
+                b.className = 'flex-1 bg-purple-600 text-white text-xs py-1 rounded border border-purple-500 shadow-inner speed-btn active-speed transition';
             }
         });
     }
@@ -928,10 +1006,10 @@
         let btn = document.getElementById('btn-play');
         if (isRunning) {
             btn.innerHTML = '<i class="fa-solid fa-pause"></i> Pause Shift';
-            btn.className = 'flex-1 bg-rose-600 hover:bg-rose-500 text-white px-3 py-2 rounded transition shadow-md flex items-center justify-center gap-2 text-sm';
+            btn.className = 'flex-1 bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded transition shadow-sm flex items-center justify-center gap-2 text-sm';
         } else {
             btn.innerHTML = '<i class="fa-solid fa-play"></i> Resume Shift';
-            btn.className = 'flex-1 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded transition shadow-md flex items-center justify-center gap-2 text-sm';
+            btn.className = 'flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded transition shadow-sm flex items-center justify-center gap-2 text-sm';
         }
     }
 
@@ -940,7 +1018,7 @@
         stats = { cellsIn: 0, packsOut: 0 };
         document.getElementById('stat-cells-in').innerText = '0';
         document.getElementById('stat-packs-out').innerText = '0';
-        for(let id in nodes) nodes[id].inventory = 0; // Clear queues
+        for(let id in nodes) nodes[id].inventory = 0; 
         particles = [];
         trucks = [];
         config.inboundTimer = 5;
@@ -949,7 +1027,7 @@
     function loop(timestamp) {
         let dt = (timestamp - lastTime) / 1000;
         lastTime = timestamp;
-        if (dt > 0.1) dt = 0.1; // Cap dt to prevent massive jumps
+        if (dt > 0.1) dt = 0.1; 
 
         updateSim(dt);
         draw();
@@ -959,7 +1037,7 @@
 
     window.onload = () => {
         resizeCanvas();
-        applyCapacityChange(); // Builds initial 10GWh layout
+        applyCapacityChange(); 
         lastTime = performance.now();
         requestAnimationFrame(loop);
     };
